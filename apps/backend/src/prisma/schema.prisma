@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,3 +7,71 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Status {
+  COMPLETE
+  PENDING
+}
+
+enum Service {
+  CARPENTER
+  PLUMBER
+  ELECTRICIAN
+  CHARITY
+  USER
+}
+
+enum Pet {
+  CAT
+  DOG
+  ETC
+}
+
+model User {
+  id         String    @id @default(uuid())
+  email      String    @unique
+  name       String
+  phone      Int       @unique
+  isVerified Boolean   @default(false)
+  location   String?
+  profiles   Profile[]
+  jobPosts   JobPost[]
+  petPosts   PetsPost[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Profile {
+  id        String   @id @default(uuid())
+  userId    String
+  service   Service  @default(USER)
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model JobPost {
+  id             Int      @id @default(autoincrement())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  jobType        Service  @default(USER)
+  jobDescription String?
+  published      Boolean  @default(false)
+  author         User     @relation(fields: [authorId], references: [id])
+  authorId       String
+  location       String
+  status         Status   @default(PENDING)
+  fixerId        String?
+}
+
+model PetsPost {
+  id             Int      @id @default(autoincrement())
+  petType        Pet      @default(ETC)
+  petImage       String?
+  author         User     @relation(fields: [authorId], references: [id])
+  authorId       String
+  location       String
+  status         Status   @default(PENDING)
+  fixerId        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
