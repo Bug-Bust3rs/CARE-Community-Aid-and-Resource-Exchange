@@ -7,37 +7,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Status {
-  COMPLETE
-  PENDING
-}
-
-enum Service {
-  CARPENTER
-  PLUMBER
-  ELECTRICIAN
-  CHARITY
-  USER
-}
-
-enum Pet {
-  CAT
-  DOG
-  ETC
-}
 
 model User {
-  id         String    @id @default(uuid())
-  email      String    @unique
-  name       String
-  phone      Int       @unique
-  isVerified Boolean   @default(false)
-  location   String?
-  profiles   Profile[]
-  jobPosts   JobPost[]
-  petPosts   PetsPost[]
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id            String          @id @default(uuid())
+  email         String          @unique
+  name          String
+  phone         Int             @unique
+  isVerified    Boolean         @default(false)
+  location      String?
+  profiles      Profile[]
+  jobPosts      JobPost[]
+  petPosts      PetsPost[]
+  donationPosts DonationPosts[]
+  OTPs          OTP[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 }
 
 model Profile {
@@ -64,14 +48,64 @@ model JobPost {
 }
 
 model PetsPost {
-  id             Int      @id @default(autoincrement())
-  petType        Pet      @default(ETC)
-  petImage       String?
-  author         User     @relation(fields: [authorId], references: [id])
-  authorId       String
-  location       String
-  status         Status   @default(PENDING)
-  fixerId        String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  petType   Pet      @default(OTHERS)
+  petImage  String?
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  location  String
+  status    Status   @default(PENDING)
+  fixerId   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DonationPosts {
+  id            Int      @id @default(autoincrement())
+  donationType  Pet      @default(OTHERS)
+  donationImage String?
+  author        User     @relation(fields: [authorId], references: [id])
+  authorId      String
+  location      String
+  status        Status   @default(PENDING)
+  fixerId       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model OTP {
+  id        Int      @id @default(autoincrement())
+  otp       String
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  createdAt DateTime @default(now())
+  expiresAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP + interval '10 minutes'"))
+  updatedAt DateTime @updatedAt
+}
+
+enum Status {
+  COMPLETE
+  PENDING
+}
+
+enum Service {
+  CARPENTER
+  PLUMBER
+  ELECTRICIAN
+  CHARITY
+  USER
+  OTHERS
+}
+
+enum Pet {
+  CAT
+  DOG
+  OTHERS
+}
+
+enum Donation {
+  FOOD
+  BOOKS
+  CLOTHES
+  OTHERS
 }
