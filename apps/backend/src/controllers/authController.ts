@@ -5,6 +5,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { sendEmail } from "../lib/emailService";
 import jwt from "jsonwebtoken";
 import { config } from "../config/config";
+import { createToken } from "../lib/tokenConfig";
 
 const prisma = new PrismaClient();
 
@@ -29,9 +30,7 @@ export const register = async (req: Request, res: Response) => {
         data: { name, email, password: hash, phone },
       });
 
-      const token = await jwt.sign({ _id: newUser.id }, config.JWT_SECRET, {
-        expiresIn: config.JWT_COOKIE_EXPIRES_IN,
-      });
+      const token = createToken(newUser.id);
       return { user: newUser, token };
     });
     await sendEmail(user.user.id);
