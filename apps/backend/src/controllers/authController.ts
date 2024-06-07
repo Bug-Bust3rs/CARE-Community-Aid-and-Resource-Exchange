@@ -1,24 +1,26 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import validator from "validator";
-import { createToken } from "../lib/tokenConfig";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { sendEmail } from "../lib/emailService";
+import jwt from "jsonwebtoken";
+import { config } from "../config/config";
 
 const prisma = new PrismaClient();
 
 export const register = async (req: Request, res: Response) => {
   const { name, email, password, phone } = req.body;
+
   if (!name || !email || !password || !phone) {
-    throw Error("All fields must be filled");
+    return res.status(400).json({ message: "All fields must be filled" });
   }
   if (!validator.isEmail(email)) {
-    throw Error("Email is not valid");
+    return res.status(400).json({ message: "Email is not valid" });
   }
   try {
     const exists = await prisma.user.findUnique({ where: { email } });
     if (exists) {
-      throw Error("Email already in use");
+      return res.status(400).json({ message: "Email already in use" });
     }
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
@@ -26,7 +28,10 @@ export const register = async (req: Request, res: Response) => {
       const newUser = await prisma.user.create({
         data: { name, email, password: hash, phone },
       });
-      const token = createToken(newUser.id);
+
+      const token = await jwt.sign({ _id: newUser.id }, config.JWT_SECRET, {
+        expiresIn: config.JWT_COOKIE_EXPIRES_IN,
+      });
       return { user: newUser, token };
     });
     await sendEmail(user.user.id);
