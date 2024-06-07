@@ -3,8 +3,7 @@ import bcrypt from "bcryptjs";
 import validator from "validator";
 import { createToken } from "../lib/tokenConfig";
 import { Prisma, PrismaClient } from "@prisma/client";
-
-
+import { sendEmail } from "../lib/emailService";
 
 const prisma = new PrismaClient();
 
@@ -25,16 +24,12 @@ export const register = async (req: Request, res: Response) => {
     const hash = await bcrypt.hash(password, salt);
     const user = await prisma.$transaction(async (prisma) => {
       const newUser = await prisma.user.create({
-        data: { name , email, password: hash , phone },
+        data: { name, email, password: hash, phone },
       });
       const token = createToken(newUser.id);
       return { user: newUser, token };
     });
-    // config.EMAIL_SERVICE === "RESEND"
-    //   ? await sendEmail(user.user.id)
-    //   : await sendEmailwithNodemailer(user.user.id);
-    // await sendEmail(user.user.id);              //For Resend Mailer
-    // await sendEmailwithNodemailer(user.user.id); //For NodeMailer
+    await sendEmail(user.user.id);
     return res
       .status(200)
       .json({ success: true, message: "Verification email sent" });
