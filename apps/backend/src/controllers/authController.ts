@@ -6,6 +6,7 @@ import { sendEmail } from "../lib/emailService";
 import jwt from "jsonwebtoken";
 import { config } from "../config/config";
 import { createToken } from "../lib/tokenConfig";
+import { sendOTP } from "../lib/otpService";
 
 const prisma = new PrismaClient();
 
@@ -77,17 +78,11 @@ export const verifyEmail = async (req: Request, res: Response) => {
 
   await prisma.oTP.delete({ where: { id: verificationToken.id } });
 
-  res
-    .status(200)
-    .send({
-      success: true,
-      message: "Verified User! Our frontend page will be ready soon!",
-    });
+  res.status(200).send({
+    success: true,
+    message: "Verified User! Our frontend page will be ready soon!",
+  });
 };
-
-
-
-
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -100,11 +95,7 @@ export const login = async (req: Request, res: Response) => {
       throw new Error("Invalid credentials");
     }
     if (!user.isVerified) {
-      config.EMAIL_SERVICE === "RESEND"
-        ? await sendEmail(user.id)
-        : await sendEmailwithNodemailer(user.id);
-      // await sendEmail(user.user.id);              //For Resend Mailer
-      // await sendEmailwithNodemailer(user.id); //For NodeMailer
+      await sendEmail(user.id);
       return res.status(200).json({
         success: true,
         message: "At First Verify Your Email,A Verification email sent.",
@@ -114,23 +105,14 @@ export const login = async (req: Request, res: Response) => {
     if (!match) {
       throw new Error("Invalid credentials");
     }
-    const token = createToken(user.id);
+    await sendOTP(user.id);
 
     return res.status(200).json({
-      message: "Login successful!",
+      message: "OTP Send successfull!",
       success: true,
-      token: token,
-      email: user.email,
-      id: user.id,
     });
   } catch (error) {
-    console.error("Login error:", error.message);
-    if (error.message === "Invalid credentials") {
-      return res
-        .status(401)
-        .json({ message: "Invalid email or password.", success: false });
-    } else {
-      return res.status(500).json({ message: "Login failed.", success: false });
-    }
+    console.error("Login error:", error);
+    return res.status(500).json({ message: "Login failed.", success: false });
   }
 };
