@@ -11,6 +11,7 @@ model User {
   id            String          @id @default(uuid())
   email         String          @unique
   name          String
+  password      String
   phone         Int             @unique
   isVerified    Boolean         @default(false)
   location      String?
@@ -33,7 +34,7 @@ model Profile {
 }
 
 model JobPost {
-  id            String      @id @default(uuid())
+  id             String   @id @default(uuid())
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   jobType        Service  @default(USER)
@@ -47,7 +48,7 @@ model JobPost {
 }
 
 model PetsPost {
-  id        String      @id @default(uuid())
+  id        String   @id @default(uuid())
   petType   Pet      @default(OTHERS)
   petImage  String?
   author    User     @relation(fields: [authorId], references: [id])
@@ -60,7 +61,7 @@ model PetsPost {
 }
 
 model DonationPosts {
-  id            String      @id @default(uuid())
+  id            String   @id @default(uuid())
   donationType  Pet      @default(OTHERS)
   donationImage String?
   author        User     @relation(fields: [authorId], references: [id])
@@ -73,7 +74,7 @@ model DonationPosts {
 }
 
 model OTP {
-  id        String      @id @default(uuid())
+  id        String   @id @default(uuid())
   otp       String
   author    User     @relation(fields: [authorId], references: [id])
   authorId  String
