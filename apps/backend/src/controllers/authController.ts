@@ -7,7 +7,6 @@ import { sendEmail } from "../lib/emailService";
 import { sendOTP } from "../lib/otpService";
 import { createToken } from "../lib/tokenConfig";
 
-
 export const register = async (req: Request, res: Response) => {
   const { name, email, password, phone } = req.body;
 
@@ -115,8 +114,6 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-
-
 export const verifyOTP = async (req: Request, res: Response) => {
   const { token } = req.query;
   const { userId } = req.params;
@@ -124,7 +121,7 @@ export const verifyOTP = async (req: Request, res: Response) => {
     return res.status(400).send("Token not provided or invalid");
 
   const verificationToken = await prisma.oTP.findFirst({
-    where: { otp: token , authorId : userId },
+    where: { otp: token, authorId: userId },
   });
   if (!verificationToken)
     return res.status(404).json({ success: false, message: "Invalid token" });
@@ -135,14 +132,19 @@ export const verifyOTP = async (req: Request, res: Response) => {
       .json({ success: false, message: "Token has expired" });
 
   await prisma.oTP.delete({ where: { id: verificationToken.id } });
- const jwttoken = createToken(verificationToken.authorId);
-      return res.status(200).json({
-        message: "Login successful!",
-        success: true,
-        token: jwttoken,
-        // email: user.email,
-        // id: user._id,
-        // name: user.name,
-        // role: user.role,
-      });
+  const user = await prisma.user.findUnique({
+    where: { id: verificationToken.authorId },
+  });
+  if (!user) {
+    return res.status(400).json({ success: false, message: "User Not Found!" });
+  }
+  const jwttoken = createToken(verificationToken.authorId);
+  return res.status(200).json({
+    message: "Login successful!",
+    success: true,
+    token: jwttoken,
+    email: user.email,
+    id: user.id,
+    name: user.name,
+  });
 };
