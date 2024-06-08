@@ -1,15 +1,19 @@
 import { Request, Response } from "express";
 import prisma from "../config/prisma.config";
+import { Service } from "@prisma/client";
 
 export const getProfiles = async (req: Request, res: Response) => {
+  const { service } = req.query;
+
   try {
-    const profiles = await prisma.profile.findMany();
+    const profiles = await prisma.profile.findMany({
+      where: service ? { service: service as Service } : undefined,
+    });
     res.status(200).json(profiles);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch profiles" });
   }
 };
-
 
 export const getProfile = async (req: Request, res: Response) => {
   const { id } = req.params;
