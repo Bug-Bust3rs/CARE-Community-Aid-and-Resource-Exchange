@@ -1,5 +1,26 @@
 import { Request, Response } from "express";
+import { Request as ExpressRequest } from "express";
 import prisma from "../config/prisma.config";
+import cloudinary from "cloudinary";
+import dataUri from "../lib/dataUri";
+
+
+
+
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+
+
+// @ts-ignore
+interface RequestWithFile extends ExpressRequest {
+  file: unknown;
+}
+
+
 
 export const getAllPetPosts = async (req: Request, res: Response) => {
   try {
@@ -10,13 +31,18 @@ export const getAllPetPosts = async (req: Request, res: Response) => {
   }
 };
 
-export const createPetPost = async (req: Request, res: Response) => {
+export const createPetPost = async (req: RequestWithFile, res: Response) => {
   try {
-    const { petType, petImage, authorId, location, status, fixerId } = req.body;
+    const { petType, authorId, location, status, fixerId } = req.body;
+    const file = req.file;
+    // @ts-ignore
+    const fileUri = dataUri(file);
+    // @ts-ignore
+    const uploadCloud = await cloudinary.v2.uploader.upload(fileUri.content);
     const newPetPost = await prisma.petsPost.create({
       data: {
         petType,
-        petImage,
+        petImage : uploadCloud.secure_url,
         authorId,
         location,
         status,

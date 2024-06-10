@@ -6,11 +6,12 @@ import {
   updatePetPost,
   deletePetPost,
 } from "../controllers/petPostController";
-
+import fileUpload from "../lib/fileUpload";
 const router = Router();
 
 router.get("/", getAllPetPosts);
-router.post("/", createPetPost);
+// @ts-ignore
+router.post("/", fileUpload, createPetPost);
 router.get("/:id", getPetPostById);
 router.put("/:id", updatePetPost);
 router.delete("/:id", deletePetPost);

@@ -1,6 +1,18 @@
 import { Request, Response } from "express";
 import prisma from "../config/prisma.config";
+import cloudinary from "cloudinary";
+import dataUri from "../lib/dataUri";
 
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// @ts-ignore
+interface RequestWithFile extends ExpressRequest {
+  file: unknown;
+}
 
 export const getAllDonationPosts = async (req: Request, res: Response) => {
   try {
@@ -13,12 +25,18 @@ export const getAllDonationPosts = async (req: Request, res: Response) => {
 
 export const createDonationPost = async (req: Request, res: Response) => {
   try {
-    const { donationType, donationImage, authorId, location, status, fixerId } =
+    const { donationType, authorId, location, status, fixerId } =
       req.body;
+
+    const file = req.file;
+    // @ts-ignore
+    const fileUri = dataUri(file);
+    // @ts-ignore
+    const uploadCloud = await cloudinary.v2.uploader.upload(fileUri.content);
     const newDonationPost = await prisma.donationPosts.create({
       data: {
         donationType,
-        donationImage,
+        donationImage:uploadCloud.secure_url,
         authorId,
         location,
         status,
